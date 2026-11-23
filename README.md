@@ -1,0 +1,53 @@
+
+name: Build Chan Shop APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Chan Shop APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: |
+            platforms;android-35
+            build-tools;35.0.0
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extract Android Project
+        run: |
+          unzip -q ChanShopAndroid_KBZPay_Project.zip -d source
+
+      - name: Build APK
+        run: |
+          gradle -p source/ChanShopAndroid assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chan-Shop-APK
+          path: source/ChanShopAndroid/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
