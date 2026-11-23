@@ -32,14 +32,11 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-       with:
-        gradle-version: '8.9'
-
-      
+        with:
+          gradle-version: '8.9'
 
       - name: Extract Android Project
         run: |
-          ls -la
           mkdir -p source
           ZIP_FILE=$(find . -maxdepth 3 -name "*.zip" -not -path "./source/*" | head -n 1)
           echo "Found zip: $ZIP_FILE"
@@ -48,35 +45,16 @@ jobs:
             exit 1
           fi
           unzip -q "$ZIP_FILE" -d source
-          find source -maxdepth 4 -name "gradlew"
-
+          ls -la source/ChanShopAndroid
 
       - name: Build APK
         run: |
-          GRADLEW_PATH=$(find source -name "gradlew" -type f | head -n 1)
-          if [ -n "$GRADLEW_PATH" ]; then
-            PROJECT_DIR=$(dirname "$GRADLEW_PATH")
-            echo "Building with gradlew inside: $PROJECT_DIR"
-            cd "$PROJECT_DIR"
-            chmod +x ./gradlew
-            ./gradlew assembleDebug --stacktrace
-          else
-            SETTINGS_PATH=$(find source \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -type f | head -n 1)
-            if [ -z "$SETTINGS_PATH" ]; then
-              echo "Error: Neither gradlew nor settings.gradle found inside source/"
-              find source -maxdepth 4
-              exit 1
-            fi
-            PROJECT_DIR=$(dirname "$SETTINGS_PATH")
-            echo "Building with system gradle inside: $PROJECT_DIR"
-            cd "$PROJECT_DIR"
-            gradle assembleDebug --stacktrace
-          fi
-
+          cd source/ChanShopAndroid
+          gradle assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Chan Shop 
+          name: Chan-Shop-APK
           path: source/**/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
