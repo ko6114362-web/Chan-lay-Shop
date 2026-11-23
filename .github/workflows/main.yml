@@ -50,16 +50,26 @@ jobs:
 
       - name: Build APK
         run: |
-          GRADLEW_PATH=$(find source -maxdepth 4 -name "gradlew" -type f | head -n 1)
-          if [ -z "$GRADLEW_PATH" ]; then
-            echo "Error: gradlew not found inside source/"
-            exit 1
+          GRADLEW_PATH=$(find source -name "gradlew" -type f | head -n 1)
+          if [ -n "$GRADLEW_PATH" ]; then
+            PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+            echo "Building with gradlew inside: $PROJECT_DIR"
+            cd "$PROJECT_DIR"
+            chmod +x ./gradlew
+            ./gradlew assembleDebug --stacktrace
+          else
+            SETTINGS_PATH=$(find source \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -type f | head -n 1)
+            if [ -z "$SETTINGS_PATH" ]; then
+              echo "Error: Neither gradlew nor settings.gradle found inside source/"
+              find source -maxdepth 4
+              exit 1
+            fi
+            PROJECT_DIR=$(dirname "$SETTINGS_PATH")
+            echo "Building with system gradle inside: $PROJECT_DIR"
+            cd "$PROJECT_DIR"
+            gradle assembleDebug --stacktrace
           fi
-          PROJECT_DIR=$(dirname "$GRADLEW_PATH")
-          echo "Building inside: $PROJECT_DIR"
-          cd "$PROJECT_DIR"
-          chmod +x ./gradlew
-          ./gradlew assembleDebug --stacktrace
+
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
