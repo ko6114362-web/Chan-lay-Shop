@@ -1,4 +1,3 @@
-
 name: Build Chan Shop APK
 
 on:
@@ -24,6 +23,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: 'gradle'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
@@ -34,20 +34,32 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
 
       - name: Extract Android Project
         run: |
+          mkdir -p source
           unzip -q ChanShopAndroid_KBZPay_Project.zip -d source
+          ls -la source
 
       - name: Build APK
         run: |
-          gradle -p source/ChanShopAndroid assembleDebug
+          PROJECT_DIR="source/ChanShopAndroid"
+          if [ ! -f "$PROJECT_DIR/gradlew" ]; then
+            GRADLEW_PATH=$(find source -maxdepth 3 -name "gradlew" -type f | head -n 1)
+            if [ -z "$GRADLEW_PATH" ]; then
+              echo "Error: gradlew not found inside source/"
+              exit 1
+            fi
+            PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+          fi
+          echo "Using project directory: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Chan-Shop-APK
-          path: source/ChanShopAndroid/app/build/outputs/apk/debug/*.apk
+          path: source/**/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
