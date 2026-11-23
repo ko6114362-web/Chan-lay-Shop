@@ -56,6 +56,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Chan-Shop-APK
+          name: Chan Shop Android
           path: source/**/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
