@@ -36,9 +36,17 @@ jobs:
 
       - name: Extract Android Project
         run: |
+          ls -la
           mkdir -p source
-          unzip -q ChanShopAndroid_KBZPay_Project.zip -d source
+          ZIP_FILE=$(find . -maxdepth 3 -name "*.zip" -not -path "./source/*" | head -n 1)
+          echo "Found zip: $ZIP_FILE"
+          if [ -z "$ZIP_FILE" ]; then
+            echo "Error: No .zip file found in repository!"
+            exit 1
+          fi
+          unzip -q "$ZIP_FILE" -d source
           find source -maxdepth 4 -name "gradlew"
+
 
       - name: Build APK
         run: |
@@ -56,6 +64,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Chan Shop Android
+          name: Chan Shop 
           path: source/**/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
